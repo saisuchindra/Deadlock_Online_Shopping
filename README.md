@@ -377,7 +377,7 @@ Edit `include/config.h` to adjust system parameters:
 
 This project is for **educational purposes** — developed as part of an Operating Systems course project.
 
----
+--- https://dashboard-mu-flax.vercel.app/
 
 <p align="center">
   <b>⭐ Star this repository if you found it helpful!</b>
