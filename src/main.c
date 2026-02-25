@@ -15,6 +15,8 @@ int main() {
     pthread_t detector;
     pthread_create(&detector, NULL, detection_thread, NULL);
 
+    run_prevention();   
+    
     int choice;
 
     printf("\n=== Deadlock Management Framework ===\n");

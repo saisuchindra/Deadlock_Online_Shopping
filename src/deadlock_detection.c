@@ -70,7 +70,7 @@ void* detection_thread(void* arg) {
         for(int i = 0; i < NUM_CUSTOMERS; i++) {
 
             if(!visited[i] && dfs_cycle(i)) {
-
+                printf("Scanning for deadlock...\n");
                 printf("\n🔥 Deadlock Detected in System!\n");
 
                 recover_deadlock();
