@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Deadlock_Online_Shopping/static/css/main.c6c93b9f.css",
+    "main.js": "/Deadlock_Online_Shopping/static/js/main.8c24bfcc.js",
+    "index.html": "/Deadlock_Online_Shopping/index.html",
+    "main.c6c93b9f.css.map": "/Deadlock_Online_Shopping/static/css/main.c6c93b9f.css.map",
+    "main.8c24bfcc.js.map": "/Deadlock_Online_Shopping/static/js/main.8c24bfcc.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c6c93b9f.css",
+    "static/js/main.8c24bfcc.js"
+  ]
+}
