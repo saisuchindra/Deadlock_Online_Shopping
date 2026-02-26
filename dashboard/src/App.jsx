@@ -32,7 +32,12 @@ function Dashboard({ sim, activeCustomerCount, activeResourceCount }) {
       {/* Row 2: Resource Monitor + Control Panel */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3">
-          <ResourceMonitor resources={sim.resources} />
+          <ResourceMonitor
+            resources={sim.resources}
+            activeResourceIds={sim.activeResourceIds}
+            onToggleResource={sim.toggleResourceActive}
+            onClearFilter={sim.clearResourceFilter}
+          />
         </div>
         <div className="xl:col-span-1">
           <ControlPanel
@@ -72,6 +77,8 @@ function Dashboard({ sim, activeCustomerCount, activeResourceCount }) {
         <StressTest
           stressData={sim.stressData}
           active={sim.stressTestActive}
+          stressLevel={sim.stressLevel}
+          onAdjustLevel={sim.adjustStressLevel}
         />
       </div>
     </motion.div>

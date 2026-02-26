@@ -26,6 +26,10 @@ export function useSimulation() {
   const [avoidanceEnabled, setAvoidanceEnabled] = useState(false);
   const [detectionEnabled, setDetectionEnabled] = useState(true);
   const [stressTestActive, setStressTestActive] = useState(false);
+  const [stressLevel, setStressLevel] = useState(5); // 1-10 scale
+
+  // Active resource filter (empty Set = all active)
+  const [activeResourceIds, setActiveResourceIds] = useState(new Set());
 
   // Core state
   const [resources, setResources] = useState(() => generateInitialResources(8));
@@ -64,11 +68,15 @@ export function useSimulation() {
         const res = prevResources.map((r) => ({ ...r, waitingThreads: [] }));
         const custs = prevCustomers.map((c) => ({ ...c, holding: [...c.holding] }));
 
+        // Determine which resources are active (empty set = all)
+        const activeSet = activeResourceIds;
+        const isResActive = (r) => activeSet.size === 0 || activeSet.has(r.id);
+
         // Simulate resource allocation
         custs.forEach((c) => {
           if (c.state === 'running' || c.state === 'waiting') {
             const availableRes = res.filter(
-              (r) => r.available && !c.holding.includes(r.id)
+              (r) => isResActive(r) && r.available && !c.holding.includes(r.id)
             );
             if (availableRes.length > 0 && Math.random() > 0.3) {
               const target = randomPick(availableRes);
@@ -80,7 +88,7 @@ export function useSimulation() {
               c.state = 'running';
             } else if (Math.random() > 0.5) {
               const unavailable = res.filter(
-                (r) => !r.available && !c.holding.includes(r.id)
+                (r) => isResActive(r) && !r.available && !c.holding.includes(r.id)
               );
               if (unavailable.length > 0) {
                 const target = randomPick(unavailable);
@@ -171,14 +179,14 @@ export function useSimulation() {
 
         // Stress test data
         if (stressTestActive) {
-          setStressData((prev) => [...prev, generateStressData(currentTick)].slice(-MAX_STRESS_POINTS));
+          setStressData((prev) => [...prev, generateStressData(currentTick, stressLevel)].slice(-MAX_STRESS_POINTS));
         }
 
         return prevResources;
       });
       return prevCustomers;
     });
-  }, [preventionEnabled, avoidanceEnabled, detectionEnabled, stressTestActive]);
+  }, [preventionEnabled, avoidanceEnabled, detectionEnabled, stressTestActive, stressLevel, activeResourceIds]);
 
   // Main simulation loop
   useEffect(() => {
@@ -235,6 +243,8 @@ export function useSimulation() {
     setTotalGranted(0);
     setTotalDenied(0);
     setStressTestActive(false);
+    setStressLevel(5);
+    setActiveResourceIds(new Set());
     setPreventionEnabled(false);
     setAvoidanceEnabled(false);
     setDetectionEnabled(true);
@@ -256,6 +266,26 @@ export function useSimulation() {
     }
   }, [stressTestActive]);
 
+  const adjustStressLevel = useCallback((delta) => {
+    setStressLevel((prev) => Math.max(1, Math.min(10, prev + delta)));
+  }, []);
+
+  const toggleResourceActive = useCallback((resourceId) => {
+    setActiveResourceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(resourceId)) {
+        next.delete(resourceId);
+      } else {
+        next.add(resourceId);
+      }
+      return next;
+    });
+  }, []);
+
+  const clearResourceFilter = useCallback(() => {
+    setActiveResourceIds(new Set());
+  }, []);
+
   return {
     // State
     isRunning,
@@ -272,6 +302,8 @@ export function useSimulation() {
     totalGranted,
     totalDenied,
     stressTestActive,
+    stressLevel,
+    activeResourceIds,
     preventionEnabled,
     avoidanceEnabled,
     detectionEnabled,
@@ -281,6 +313,9 @@ export function useSimulation() {
     stopSimulation,
     resetSystem,
     toggleStressTest,
+    adjustStressLevel,
+    toggleResourceActive,
+    clearResourceFilter,
     setPreventionEnabled,
     setAvoidanceEnabled,
     setDetectionEnabled,

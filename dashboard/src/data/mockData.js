@@ -172,16 +172,17 @@ export function generateWaitForGraph(customers, resources) {
   return { nodes, edges };
 }
 
-export function generateStressData(tick) {
+export function generateStressData(tick, level = 5) {
+  const scale = level / 5; // 1.0 at level 5, 0.2 at level 1, 2.0 at level 10
   return {
     tick,
     time: `${tick}s`,
-    threadSpawns: randomInt(5, 40),
-    contentionLevel: randomInt(20, 95),
-    lockAttempts: randomInt(50, 300),
-    lockFailures: randomInt(10, 100),
-    avgWaitTime: randomInt(5, 500),
-    resourceUtilization: randomInt(40, 99),
+    threadSpawns: Math.round(randomInt(5, 40) * scale),
+    contentionLevel: Math.min(100, Math.round(randomInt(20, 95) * scale)),
+    lockAttempts: Math.round(randomInt(50, 300) * scale),
+    lockFailures: Math.round(randomInt(10, 100) * scale),
+    avgWaitTime: Math.round(randomInt(5, 500) * scale),
+    resourceUtilization: Math.min(100, Math.round(randomInt(40, 99) * scale)),
   };
 }
 

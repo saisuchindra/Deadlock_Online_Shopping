@@ -5,7 +5,7 @@ import {
   ResponsiveContainer, LineChart, Line,
 } from 'recharts';
 import GlassCard from './GlassCard';
-import { Flame, Activity, Lock, Timer } from 'lucide-react';
+import { Flame, Activity, Lock, Timer, ChevronUp, ChevronDown, Gauge } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload) return null;
@@ -31,8 +31,18 @@ function StressMetric({ icon: Icon, label, value, color }) {
   );
 }
 
-export default function StressTest({ stressData, active }) {
+export default function StressTest({ stressData, active, stressLevel = 5, onAdjustLevel }) {
   const latest = stressData[stressData.length - 1] || {};
+
+  const levelColor =
+    stressLevel <= 3 ? 'text-success' :
+    stressLevel <= 6 ? 'text-warning' :
+    'text-danger';
+
+  const levelBarColor =
+    stressLevel <= 3 ? 'bg-success' :
+    stressLevel <= 6 ? 'bg-warning' :
+    'bg-danger';
 
   return (
     <GlassCard className="p-5" glow={active ? 'accent' : ''}>
@@ -53,6 +63,66 @@ export default function StressTest({ stressData, active }) {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Stress Level Control */}
+      <div className="mb-5 p-3 rounded-xl bg-surface-900/50 border border-surface-700/30">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Gauge size={14} className={levelColor} />
+            <span className="text-xs font-medium text-surface-300 uppercase tracking-wider">
+              Stress Level
+            </span>
+          </div>
+          <span className={`text-lg font-bold tabular-nums ${levelColor}`}>
+            {stressLevel}<span className="text-xs text-surface-500 font-normal">/10</span>
+          </span>
+        </div>
+
+        {/* Level Bar */}
+        <div className="flex items-center gap-1 mb-3">
+          {Array.from({ length: 10 }, (_, i) => (
+            <div
+              key={i}
+              className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                i < stressLevel ? levelBarColor : 'bg-surface-700/40'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => onAdjustLevel && onAdjustLevel(-1)}
+            disabled={stressLevel <= 1}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold
+              bg-surface-800/60 border border-surface-600/30 text-surface-300
+              hover:bg-surface-700/60 hover:text-white hover:border-surface-500/40
+              disabled:opacity-30 disabled:cursor-not-allowed
+              transition-all duration-200 active:scale-95"
+          >
+            <ChevronDown size={14} />
+            Decrease
+          </button>
+
+          <span className="text-[10px] text-surface-500 uppercase tracking-widest font-medium min-w-[60px] text-center">
+            {stressLevel <= 3 ? 'Low' : stressLevel <= 6 ? 'Medium' : stressLevel <= 8 ? 'High' : 'Extreme'}
+          </span>
+
+          <button
+            onClick={() => onAdjustLevel && onAdjustLevel(1)}
+            disabled={stressLevel >= 10}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold
+              bg-surface-800/60 border border-surface-600/30 text-surface-300
+              hover:bg-surface-700/60 hover:text-white hover:border-surface-500/40
+              disabled:opacity-30 disabled:cursor-not-allowed
+              transition-all duration-200 active:scale-95"
+          >
+            Increase
+            <ChevronUp size={14} />
+          </button>
+        </div>
       </div>
 
       {!active && stressData.length === 0 ? (
