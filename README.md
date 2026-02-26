@@ -1,6 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Language-C-00599C?style=for-the-badge&logo=c&logoColor=white" />
   <img src="https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/Routing-React_Router-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white" />
   <img src="https://img.shields.io/badge/Styling-Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
   <img src="https://img.shields.io/badge/OS_Concept-Deadlock_Management-FF4444?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Threads-POSIX_pthreads-green?style=for-the-badge" />
@@ -54,11 +55,16 @@ This project simulates that exact scenario and implements three classical OS str
 ### Frontend (React Dashboard)
 - 🖥️ **Real-time simulation engine** with tick-based state updates
 - 📊 **Resource Monitor** — live view of resource allocation, ownership, and wait queues
+  - 🎯 **Manual resource selection** — click individual resources (e.g., Cart_Lock) to run only those in the simulation; unselected resources are paused
+  - 🔍 **Expandable detail panel** — click any resource row to see status, owner, instances, and waiting queue
 - 🕸️ **Wait-For Graph visualization** — interactive graph showing customer-resource dependencies
 - 📉 **Performance Metrics** — CPU, memory, throughput, and latency charts (via Recharts)
 - 🎛️ **Control Panel** — start/stop simulation, toggle strategies, activate stress tests
 - 📋 **Event Log** — color-coded live feed of all system events
 - 🧪 **Stress Test Monitor** — thread spawns, contention levels, lock failures
+  - 📈 **Manual stress level control** — increase/decrease stress intensity (1–10 scale) with arrow buttons
+- 📖 **About Page** — comprehensive project overview with animated glassmorphism cards
+- 🔗 **Client-side routing** — Dashboard and About pages via React Router
 - 🎨 **Glassmorphism UI** — modern dark theme with animated components (Framer Motion)
 
 ---
@@ -72,10 +78,10 @@ This project simulates that exact scenario and implements three classical OS str
 │  │ System   │ │ Resource │ │ Wait-For  │ │ Performance  │  │
 │  │ Status   │ │ Monitor  │ │ Graph     │ │ Metrics      │  │
 │  └──────────┘ └──────────┘ └───────────┘ └──────────────┘  │
-│  ┌──────────┐ ┌──────────┐ ┌───────────┐                   │
-│  │ Control  │ │ Event    │ │ Stress    │                   │
-│  │ Panel    │ │ Log      │ │ Test      │                   │
-│  └──────────┘ └──────────┘ └───────────┘                   │
+│  ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌──────────────┐  │
+│  │ Control  │ │ Event    │ │ Stress    │ │  About       │  │
+│  │ Panel    │ │ Log      │ │ Test      │ │  Page        │  │
+│  └──────────┘ └──────────┘ └───────────┘ └──────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -158,12 +164,13 @@ The interactive dashboard provides a complete visual representation of the deadl
 | Component | Description |
 |-----------|-------------|
 | **System Status** | Shows overall system state — idle, running, deadlock, or recovery — with live counters |
-| **Resource Monitor** | Displays all resources (Cart Lock, Payment Gateway, Inventory DB, etc.) with ownership and wait queues |
+| **Resource Monitor** | Displays all resources with ownership and wait queues; **click individual resources to activate/deactivate them in the simulation**; expandable detail panel per resource |
 | **Wait-For Graph** | Visualizes customer → resource dependencies; highlights deadlock cycles |
 | **Control Panel** | Toggle Prevention / Avoidance / Detection strategies on-the-fly |
 | **Event Log** | Color-coded live feed: 🔵 requests, 🟢 allocations, 🟡 blocks, 🔴 deadlocks, 🟣 recoveries |
 | **Performance Metrics** | Real-time charts for CPU usage, memory, throughput, and latency |
-| **Stress Test** | Monitor thread spawns, lock contention, and failure rates under load |
+| **Stress Test** | Monitor thread spawns, lock contention, and failure rates; **manual stress level control (1–10)** with increase/decrease buttons |
+| **About Page** | Comprehensive project overview — problem statement, strategies, architecture, tech stack |
 
 ---
 
@@ -255,8 +262,8 @@ Deadlock_Online_Shopping/
 │   ├── public/                   # Static assets
 │   ├── build/                    # Production build
 │   └── src/
-│       ├── App.jsx               # Main dashboard layout
-│       ├── index.js              # React entry point
+│       ├── App.jsx               # Main dashboard layout with React Router
+│       ├── index.js              # React entry point (BrowserRouter)
 │       ├── index.css             # Global styles
 │       ├── hooks/
 │       │   └── useSimulation.js  # Core simulation engine (tick-based state)
@@ -264,12 +271,13 @@ Deadlock_Online_Shopping/
 │       │   └── mockData.js       # Data generators (customers, resources, events)
 │       └── components/
 │           ├── SystemStatus.jsx      # System state indicator
-│           ├── ResourceMonitor.jsx   # Resource allocation table
+│           ├── ResourceMonitor.jsx   # Resource allocation table with manual selection
 │           ├── WaitForGraph.jsx      # Dependency graph visualization
 │           ├── ControlPanel.jsx      # Strategy toggles & controls
 │           ├── EventLog.jsx          # Live event feed
 │           ├── PerformanceMetrics.jsx # Charts & graphs
-│           ├── StressTest.jsx        # Stress test monitor
+│           ├── StressTest.jsx        # Stress test monitor with level control
+│           ├── AboutPage.jsx         # About page with project details
 │           └── GlassCard.jsx         # Reusable glassmorphism card
 │
 ├── logs/                         # Runtime logs (system.log)
@@ -329,6 +337,7 @@ Stress test completed.
 | **Threading** | POSIX pthreads | Concurrent customer simulation |
 | **Synchronization** | Mutexes (`pthread_mutex_t`) | Resource locking |
 | **Frontend** | React 18 | Dashboard UI framework |
+| **Routing** | React Router v6 | Client-side page navigation |
 | **Styling** | Tailwind CSS 3 | Utility-first responsive design |
 | **Charts** | Recharts | Performance data visualization |
 | **Animations** | Framer Motion | Smooth UI transitions |
