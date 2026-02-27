@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import GlassCard from './GlassCard';
 import OSSimulation from './OSSimulation';
+import OSRealtimeSimulation from './OSRealtimeSimulation';
 import {
   Cpu,
   Layers,
@@ -128,6 +129,11 @@ export default function OSExecutionPage() {
       {/* Interactive Simulation */}
       <motion.div {...fadeUp} transition={{ delay: 0.05 }}>
         <OSSimulation />
+      </motion.div>
+
+      {/* Real-Time Deadlock Simulation */}
+      <motion.div {...fadeUp} transition={{ delay: 0.07 }}>
+        <OSRealtimeSimulation />
       </motion.div>
 
       {/* 1. Process Creation */}
