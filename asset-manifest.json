@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/Deadlock_Online_Shopping/static/css/main.b0d68a30.css",
-    "main.js": "/Deadlock_Online_Shopping/static/js/main.341e7eb2.js",
+    "main.css": "/Deadlock_Online_Shopping/static/css/main.da2e5827.css",
+    "main.js": "/Deadlock_Online_Shopping/static/js/main.26be4af0.js",
     "index.html": "/Deadlock_Online_Shopping/index.html",
-    "main.b0d68a30.css.map": "/Deadlock_Online_Shopping/static/css/main.b0d68a30.css.map",
-    "main.341e7eb2.js.map": "/Deadlock_Online_Shopping/static/js/main.341e7eb2.js.map"
+    "main.da2e5827.css.map": "/Deadlock_Online_Shopping/static/css/main.da2e5827.css.map",
+    "main.26be4af0.js.map": "/Deadlock_Online_Shopping/static/js/main.26be4af0.js.map"
   },
   "entrypoints": [
-    "static/css/main.b0d68a30.css",
-    "static/js/main.341e7eb2.js"
+    "static/css/main.da2e5827.css",
+    "static/js/main.26be4af0.js"
   ]
 }
