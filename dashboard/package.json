@@ -2,6 +2,7 @@
   "name": "deadlock-dashboard",
   "version": "1.0.0",
   "description": "Real-time Deadlock Management Dashboard for Online Shopping Applications",
+  "homepage": "https://saisuchindra.github.io/Deadlock_Online_Shopping",
   "private": true,
   "dependencies": {
     "framer-motion": "^10.16.4",
@@ -14,10 +15,13 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test"

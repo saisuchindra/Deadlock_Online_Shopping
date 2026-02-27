@@ -13,7 +13,7 @@ function polarToCartesian(cx, cy, radius, angleDeg) {
   };
 }
 
-export default function WaitForGraph({ graphData, systemStatus }) {
+export default function WaitForGraph({ graphData, systemStatus, preventionEnabled, avoidanceEnabled }) {
   const { nodes, edges } = graphData;
 
   const positions = useMemo(() => {
@@ -42,9 +42,10 @@ export default function WaitForGraph({ graphData, systemStatus }) {
   }, [nodes]);
 
   const hasDeadlock = systemStatus === 'deadlock';
+  const isProtected = preventionEnabled || avoidanceEnabled;
 
   return (
-    <GlassCard className="p-5" glow={hasDeadlock ? 'danger' : ''}>
+    <GlassCard className="p-5" glow={hasDeadlock ? 'danger' : isProtected ? 'success' : ''}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-surface-300 uppercase tracking-wider">
           Wait-For Graph
@@ -56,6 +57,15 @@ export default function WaitForGraph({ graphData, systemStatus }) {
             className="text-xs font-bold text-danger px-2 py-1 rounded-full bg-danger/10 border border-danger/30"
           >
             CYCLE DETECTED
+          </motion.span>
+        )}
+        {!hasDeadlock && isProtected && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-xs font-bold text-success px-2 py-1 rounded-full bg-success/10 border border-success/30"
+          >
+            {preventionEnabled ? '⛔ PREVENTION ACTIVE' : '🛡️ AVOIDANCE ACTIVE'}
           </motion.span>
         )}
       </div>

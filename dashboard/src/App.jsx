@@ -10,7 +10,8 @@ import EventLog from './components/EventLog';
 import ControlPanel from './components/ControlPanel';
 import StressTest from './components/StressTest';
 import AboutPage from './components/AboutPage';
-import { Monitor, Cpu, LayoutDashboard, Info } from 'lucide-react';
+import OSExecutionPage from './components/OSExecutionPage';
+import { Monitor, Cpu, LayoutDashboard, Info, Terminal } from 'lucide-react';
 
 function Dashboard({ sim, activeCustomerCount, activeResourceCount }) {
   return (
@@ -62,6 +63,8 @@ function Dashboard({ sim, activeCustomerCount, activeResourceCount }) {
         <WaitForGraph
           graphData={sim.graphData}
           systemStatus={sim.systemStatus}
+          preventionEnabled={sim.preventionEnabled}
+          avoidanceEnabled={sim.avoidanceEnabled}
         />
         <EventLog events={sim.eventLog} />
       </div>
@@ -134,6 +137,10 @@ export default function App() {
                   <Info size={13} />
                   About
                 </NavLink>
+                <NavLink to="/os-execution" className={({ isActive }) => navLinkClass(isActive)}>
+                  <Terminal size={13} />
+                  OS Execution
+                </NavLink>
               </nav>
 
               <div className="w-px h-5 bg-surface-700/40" />
@@ -170,6 +177,10 @@ export default function App() {
               <Info size={13} />
               About
             </NavLink>
+            <NavLink to="/os-execution" className={({ isActive }) => navLinkClass(isActive)}>
+              <Terminal size={13} />
+              OS Execution
+            </NavLink>
           </div>
         </div>
       </header>
@@ -188,6 +199,7 @@ export default function App() {
             }
           />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/os-execution" element={<OSExecutionPage />} />
         </Routes>
       </main>
 

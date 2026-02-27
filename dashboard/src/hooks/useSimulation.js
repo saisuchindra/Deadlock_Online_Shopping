@@ -47,6 +47,12 @@ export function useSimulation() {
   const [totalDenied, setTotalDenied] = useState(0);
 
   const intervalRef = useRef(null);
+  const systemStatusRef = useRef('idle');
+
+  // Keep ref in sync so simulateTick reads current status (avoids stale closure)
+  useEffect(() => {
+    systemStatusRef.current = systemStatus;
+  }, [systemStatus]);
 
   const simulateTick = useCallback(() => {
     tickRef.current += 1;
@@ -78,23 +84,80 @@ export function useSimulation() {
             const availableRes = res.filter(
               (r) => isResActive(r) && r.available && !c.holding.includes(r.id)
             );
-            if (availableRes.length > 0 && Math.random() > 0.3) {
-              const target = randomPick(availableRes);
-              target.available = false;
-              target.owner = c.name;
-              target.currentInstances += 1;
-              c.holding.push(target.id);
-              c.waiting = null;
-              c.state = 'running';
-            } else if (Math.random() > 0.5) {
-              const unavailable = res.filter(
-                (r) => isResActive(r) && !r.available && !c.holding.includes(r.id)
+
+            if (preventionEnabled) {
+              // PREVENTION: enforce resource ordering — only acquire resources with ID > max held
+              const maxHeldIdx = c.holding.length > 0
+                ? Math.max(...c.holding.map((id) => parseInt(id.replace('R', ''))))
+                : -1;
+              const safeRes = availableRes.filter(
+                (r) => parseInt(r.id.replace('R', '')) > maxHeldIdx
               );
-              if (unavailable.length > 0) {
-                const target = randomPick(unavailable);
-                target.waitingThreads.push(c.name);
-                c.waiting = target.id;
-                c.state = 'waiting';
+              if (safeRes.length > 0 && Math.random() > 0.25) {
+                const target = randomPick(safeRes);
+                target.available = false;
+                target.owner = c.name;
+                target.currentInstances += 1;
+                c.holding.push(target.id);
+                c.waiting = null;
+                c.state = 'running';
+              } else if (c.holding.length === 0 && availableRes.length > 0 && Math.random() > 0.3) {
+                const target = randomPick(availableRes);
+                target.available = false;
+                target.owner = c.name;
+                target.currentInstances += 1;
+                c.holding.push(target.id);
+                c.waiting = null;
+                c.state = 'running';
+              }
+              // Prevention: never enter circular wait
+
+            } else if (avoidanceEnabled) {
+              // AVOIDANCE: simplified Banker's check — deny if granting leaves system unsafe
+              if (availableRes.length > 0 && Math.random() > 0.3) {
+                const target = randomPick(availableRes);
+                const totalAvailableAfter = res.filter((r) => r.available).length - 1;
+                const waitingCount = custs.filter((c2) => c2.state === 'waiting').length;
+                if (totalAvailableAfter >= waitingCount || waitingCount === 0) {
+                  target.available = false;
+                  target.owner = c.name;
+                  target.currentInstances += 1;
+                  c.holding.push(target.id);
+                  c.waiting = null;
+                  c.state = 'running';
+                }
+              } else if (Math.random() > 0.5) {
+                const unavailable = res.filter(
+                  (r) => isResActive(r) && !r.available && !c.holding.includes(r.id)
+                );
+                if (unavailable.length > 0) {
+                  const target = randomPick(unavailable);
+                  target.waitingThreads.push(c.name);
+                  c.waiting = target.id;
+                  c.state = 'waiting';
+                }
+              }
+
+            } else {
+              // NO STRATEGY: normal allocation (can cause deadlocks)
+              if (availableRes.length > 0 && Math.random() > 0.3) {
+                const target = randomPick(availableRes);
+                target.available = false;
+                target.owner = c.name;
+                target.currentInstances += 1;
+                c.holding.push(target.id);
+                c.waiting = null;
+                c.state = 'running';
+              } else if (Math.random() > 0.5) {
+                const unavailable = res.filter(
+                  (r) => isResActive(r) && !r.available && !c.holding.includes(r.id)
+                );
+                if (unavailable.length > 0) {
+                  const target = randomPick(unavailable);
+                  target.waitingThreads.push(c.name);
+                  c.waiting = target.id;
+                  c.state = 'waiting';
+                }
               }
             }
           }
@@ -121,49 +184,126 @@ export function useSimulation() {
       return prevResources;
     });
 
-    // Determine deadlock occurrence
-    const shouldDeadlock = !preventionEnabled && !avoidanceEnabled && Math.random() > 0.82;
-    const isRecovering = shouldDeadlock && detectionEnabled && Math.random() > 0.3;
+    // ---- Deadlock State Machine (uses ref to avoid stale closure) ----
+    const prevStatus = systemStatusRef.current;
+    let newStatus = prevStatus;
+    let didDeadlock = false;
+    let didRecover = false;
 
-    if (shouldDeadlock) {
-      setDeadlockCount((prev) => prev + 1);
-      setSystemStatus('deadlock');
-
-      // Mark some customers as deadlocked
-      setCustomers((prev) => {
-        const updated = prev.map((c) => ({ ...c }));
-        const waiting = updated.filter((c) => c.state === 'waiting');
-        if (waiting.length >= 2) {
-          waiting.slice(0, 2).forEach((c) => {
-            c.state = 'deadlocked';
-          });
-        }
-        return updated;
-      });
-    } else if (isRecovering) {
-      setRecoveryCount((prev) => prev + 1);
-      setSystemStatus('recovery');
-      setTimeout(() => setSystemStatus('running'), 2000);
-
+    if (preventionEnabled || avoidanceEnabled) {
+      // Strategies active → no deadlocks possible; clear any leftover deadlocked state
       setCustomers((prev) =>
-        prev.map((c) => (c.state === 'deadlocked' ? { ...c, state: 'running', waiting: null } : c))
+        prev.map((c) =>
+          c.state === 'deadlocked' ? { ...c, state: 'running', waiting: null } : c
+        )
       );
+      newStatus = currentTick > 1 ? 'running' : prevStatus;
     } else {
-      setSystemStatus((prev) => (prev === 'deadlock' || prev === 'recovery' ? 'running' : prev));
-      if (currentTick > 1) setSystemStatus('running');
+      // No strategies → deadlocks can occur
+      const shouldDeadlock = Math.random() > 0.82;
+
+      if (shouldDeadlock && prevStatus !== 'deadlock') {
+        didDeadlock = true;
+        setDeadlockCount((prev) => prev + 1);
+        newStatus = 'deadlock';
+        setCustomers((prev) => {
+          const updated = prev.map((c) => ({ ...c }));
+          const waiting = updated.filter((c) => c.state === 'waiting');
+          if (waiting.length >= 2) {
+            waiting.slice(0, 2).forEach((c) => { c.state = 'deadlocked'; });
+          } else {
+            const running = updated.filter((c) => c.state === 'running');
+            running.slice(0, 2).forEach((c) => { c.state = 'deadlocked'; });
+          }
+          return updated;
+        });
+      } else if (prevStatus === 'deadlock') {
+        if (detectionEnabled) {
+          didRecover = true;
+          setRecoveryCount((prev) => prev + 1);
+          newStatus = 'recovery';
+          // Clear deadlocked customers and release their resources
+          setCustomers((prev) =>
+            prev.map((c) =>
+              c.state === 'deadlocked'
+                ? { ...c, state: 'running', waiting: null, holding: [] }
+                : c
+            )
+          );
+          setResources((prev) =>
+            prev.map((r) => ({
+              ...r,
+              available: true,
+              owner: null,
+              currentInstances: 0,
+              waitingThreads: [],
+            }))
+          );
+          setTimeout(() => {
+            setSystemStatus((s) => (s === 'recovery' ? 'running' : s));
+          }, 2500);
+        } else {
+          newStatus = 'deadlock'; // Stuck — no detection to recover
+        }
+      } else if (prevStatus === 'recovery') {
+        newStatus = 'recovery'; // Let timeout handle transition
+      } else {
+        newStatus = currentTick > 1 ? 'running' : prevStatus;
+      }
     }
+
+    setSystemStatus(newStatus);
 
     // Generate events
     setCustomers((prevCustomers) => {
       setResources((prevResources) => {
         const eventTypes = [EVENT_TYPES.REQUEST, EVENT_TYPES.ALLOCATE, EVENT_TYPES.RELEASE];
-        if (shouldDeadlock) eventTypes.push(EVENT_TYPES.DEADLOCK, EVENT_TYPES.BLOCK);
-        if (isRecovering) eventTypes.push(EVENT_TYPES.RECOVERY);
+        if (didDeadlock) eventTypes.push(EVENT_TYPES.DEADLOCK, EVENT_TYPES.BLOCK);
+        if (didRecover) eventTypes.push(EVENT_TYPES.RECOVERY);
 
         const newEvents = [];
         const numEvents = randomInt(1, 3);
         for (let i = 0; i < numEvents; i++) {
           newEvents.push(generateEvent(prevCustomers, prevResources, randomPick(eventTypes)));
+        }
+
+        // Strategy-specific events for visible feedback
+        const ts = () =>
+          new Date().toLocaleTimeString('en-US', { hour12: false }) +
+          '.' +
+          String(new Date().getMilliseconds()).padStart(3, '0');
+
+        if (preventionEnabled && Math.random() > 0.35) {
+          const c = randomPick(prevCustomers);
+          const r = randomPick(prevResources);
+          newEvents.push({
+            id: Date.now() + Math.random(),
+            timestamp: ts(),
+            type: 'prevention',
+            label: 'Prevention Active',
+            color: '#10b981',
+            message: `Prevention: enforced resource ordering for ${c.name} → ${r.name}`,
+            customer: c.name,
+            resource: r.name,
+          });
+        }
+
+        if (avoidanceEnabled && Math.random() > 0.35) {
+          const c = randomPick(prevCustomers);
+          const r = randomPick(prevResources);
+          const safe = Math.random() > 0.3;
+          newEvents.push({
+            id: Date.now() + Math.random(),
+            timestamp: ts(),
+            type: safe ? 'avoidance_safe' : 'avoidance_denied',
+            label: safe ? "Banker's Check Passed" : "Banker's Check Denied",
+            color: safe ? '#3b82f6' : '#f59e0b',
+            message: safe
+              ? `Avoidance: safe state verified for ${c.name} → ${r.name}`
+              : `Avoidance: denied unsafe request from ${c.name} for ${r.name}`,
+            customer: c.name,
+            resource: r.name,
+          });
         }
 
         setEventLog((prev) => [...newEvents, ...prev].slice(0, MAX_LOG_ENTRIES));
@@ -179,7 +319,9 @@ export function useSimulation() {
 
         // Stress test data
         if (stressTestActive) {
-          setStressData((prev) => [...prev, generateStressData(currentTick, stressLevel)].slice(-MAX_STRESS_POINTS));
+          setStressData((prev) =>
+            [...prev, generateStressData(currentTick, stressLevel)].slice(-MAX_STRESS_POINTS)
+          );
         }
 
         return prevResources;
@@ -200,19 +342,28 @@ export function useSimulation() {
     };
   }, [isRunning, simulateTick]);
 
-  // Mark cycle edges in graph when deadlock
+  // Mark / clear cycle edges in graph based on system status
   useEffect(() => {
     if (systemStatus === 'deadlock') {
       setGraphData((prev) => {
         const edges = prev.edges.map((e) => ({ ...e }));
-        // Mark waiting edges as cycle
         const cycleEdges = edges.filter((e) => e.type === 'waiting');
         if (cycleEdges.length >= 2) {
-          cycleEdges.forEach((e) => {
-            e.cycle = true;
-          });
+          cycleEdges.forEach((e) => { e.cycle = true; });
         }
         return { ...prev, edges };
+      });
+    } else {
+      // Clear all cycle flags and deadlocked node states when not in deadlock
+      setGraphData((prev) => {
+        const hasAnyCycle = prev.edges.some((e) => e.cycle);
+        const hasDeadlockedNode = prev.nodes.some((n) => n.state === 'deadlocked');
+        if (!hasAnyCycle && !hasDeadlockedNode) return prev;
+        const edges = prev.edges.map((e) => ({ ...e, cycle: false }));
+        const nodes = prev.nodes.map((n) =>
+          n.state === 'deadlocked' ? { ...n, state: n.type === 'customer' ? 'running' : n.state } : n
+        );
+        return { nodes, edges };
       });
     }
   }, [systemStatus]);

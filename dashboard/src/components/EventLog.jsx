@@ -10,6 +10,9 @@ const typeIcons = {
   [EVENT_TYPES.DEADLOCK]: '⚠',
   [EVENT_TYPES.RECOVERY]: '↻',
   [EVENT_TYPES.RELEASE]: '←',
+  prevention: '⛔',
+  avoidance_safe: '✔',
+  avoidance_denied: '⚠',
 };
 
 export default function EventLog({ events }) {
@@ -54,6 +57,12 @@ export default function EventLog({ events }) {
                   ? 'bg-warning/5 border-warning/60'
                   : event.type === EVENT_TYPES.ALLOCATE
                   ? 'bg-success/5 border-success/60'
+                  : event.type === 'prevention'
+                  ? 'bg-emerald-500/5 border-emerald-500/60'
+                  : event.type === 'avoidance_safe'
+                  ? 'bg-blue-500/5 border-blue-500/60'
+                  : event.type === 'avoidance_denied'
+                  ? 'bg-amber-500/5 border-amber-500/60'
                   : 'bg-surface-800/30 border-surface-600/40'
               }`}
             >
