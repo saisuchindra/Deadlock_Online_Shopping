@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import GlassCard from './GlassCard';
 import OSSimulation from './OSSimulation';
 import OSRealtimeSimulation from './OSRealtimeSimulation';
+import OSLiveMonitor from './OSLiveMonitor';
 import {
   Cpu,
   Layers,
@@ -101,9 +102,16 @@ function ThreadBox({ name, role, color, status }) {
   );
 }
 
-export default function OSExecutionPage() {
+export default function OSExecutionPage({ sim }) {
   return (
     <div className="space-y-8">
+      {/* Live OS Monitor — connected to Dashboard simulation */}
+      {sim && (
+        <motion.div {...fadeUp}>
+          <OSLiveMonitor sim={sim} />
+        </motion.div>
+      )}
+
       {/* Hero */}
       <motion.div {...fadeUp}>
         <GlassCard className="p-8 text-center" glow="accent">

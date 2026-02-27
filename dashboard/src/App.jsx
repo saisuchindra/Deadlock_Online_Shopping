@@ -199,7 +199,7 @@ export default function App() {
             }
           />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/os-execution" element={<OSExecutionPage />} />
+          <Route path="/os-execution" element={<OSExecutionPage sim={sim} />} />
         </Routes>
       </main>
 
