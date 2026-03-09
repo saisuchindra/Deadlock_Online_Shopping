@@ -11,7 +11,8 @@ import ControlPanel from './components/ControlPanel';
 import StressTest from './components/StressTest';
 import AboutPage from './components/AboutPage';
 import OSExecutionPage from './components/OSExecutionPage';
-import { Monitor, Cpu, LayoutDashboard, Info, Terminal } from 'lucide-react';
+import ShoppingDashboard from './components/ShoppingDashboard';
+import { Monitor, Cpu, LayoutDashboard, Info, Terminal, ShoppingBag } from 'lucide-react';
 
 function Dashboard({ sim, activeCustomerCount, activeResourceCount }) {
   return (
@@ -133,6 +134,10 @@ export default function App() {
                   <LayoutDashboard size={13} />
                   Dashboard
                 </NavLink>
+                <NavLink to="/shopping" className={({ isActive }) => navLinkClass(isActive)}>
+                  <ShoppingBag size={13} />
+                  Shopping
+                </NavLink>
                 <NavLink to="/about" className={({ isActive }) => navLinkClass(isActive)}>
                   <Info size={13} />
                   About
@@ -173,6 +178,10 @@ export default function App() {
               <LayoutDashboard size={13} />
               Dashboard
             </NavLink>
+            <NavLink to="/shopping" className={({ isActive }) => navLinkClass(isActive)}>
+              <ShoppingBag size={13} />
+              Shopping
+            </NavLink>
             <NavLink to="/about" className={({ isActive }) => navLinkClass(isActive)}>
               <Info size={13} />
               About
@@ -198,6 +207,7 @@ export default function App() {
               />
             }
           />
+          <Route path="/shopping" element={<ShoppingDashboard />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/os-execution" element={<OSExecutionPage sim={sim} />} />
         </Routes>
