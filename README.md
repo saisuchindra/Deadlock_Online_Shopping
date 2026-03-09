@@ -18,6 +18,7 @@
   <a href="#-architecture">Architecture</a> •
   <a href="#-getting-started">Getting Started</a> •
   <a href="#-dashboard">Dashboard</a> •
+  <a href="#-shopping-dashboard-new">Shopping Dashboard</a> •
   <a href="#-algorithms">Algorithms</a> •
   <a href="#-project-structure">Project Structure</a> •
   <a href="#-sample-output">Sample Output</a> •
@@ -64,7 +65,13 @@ This project simulates that exact scenario and implements three classical OS str
 - 🧪 **Stress Test Monitor** — thread spawns, contention levels, lock failures
   - 📈 **Manual stress level control** — increase/decrease stress intensity (1–10 scale) with arrow buttons
 - 📖 **About Page** — comprehensive project overview with animated glassmorphism cards
-- 🔗 **Client-side routing** — Dashboard and About pages via React Router
+- �️ **Shopping Dashboard** *(NEW!)* — E-commerce focused deadlock simulation
+  - 👥 **Customer Management** — displays active customers and their shopping states
+  - 📦 **Inventory System** — shows items with real-time locking status
+  - 🛒 **Shopping Carts** — tracks items in each customer's cart
+  - 🔄 **Deadlock Visualizer** — real-time visualization of circular wait chains
+  - ⚠️ **Deadlock Detection & Resolution** — manual trigger to resolve detected deadlocks
+- 🔗 **Client-side routing** — Dashboard, Shopping, and About pages via React Router
 - 🎨 **Glassmorphism UI** — modern dark theme with animated components (Framer Motion)
 
 ---
@@ -155,6 +162,19 @@ npm start
 
 The dashboard will open at **http://localhost:3000** with the real-time simulation UI.
 
+### 4. Navigate Between Dashboards
+
+Once the React dashboard loads, you'll see a navigation bar at the top with the following options:
+
+| Tab | Purpose |
+|-----|---------|
+| **Dashboard** | OS Simulation — real-time deadlock detection with 3 strategies (Prevention, Avoidance, Detection) |
+| **Shopping** *(NEW!)* | E-commerce Simulation — deadlock scenarios in a customer ordering context |
+| **About** | Project overview and documentation |
+| **OS Execution** | Terminal-like view of the C backend execution |
+
+Simply click any tab to switch contexts!
+
 ---
 
 ## 🖥️ Dashboard
@@ -171,6 +191,22 @@ The interactive dashboard provides a complete visual representation of the deadl
 | **Performance Metrics** | Real-time charts for CPU usage, memory, throughput, and latency |
 | **Stress Test** | Monitor thread spawns, lock contention, and failure rates; **manual stress level control (1–10)** with increase/decrease buttons |
 | **About Page** | Comprehensive project overview — problem statement, strategies, architecture, tech stack |
+
+### 🛍️ Shopping Dashboard *(NEW!)*
+
+A dedicated e-commerce simulation showcasing deadlock scenarios in a real-world context:
+
+**Features:**
+- 👥 **Customer Management** — 4 concurrent customers with individual shopping states (browsing, shopping, deadlocked)
+- 📦 **Dynamic Inventory** — 5 sample items (shirts, jeans, shoes, jackets, caps) with limited quantities and real-time locking
+- 🛒 **Shopping Carts** — track items each customer wants and has acquired
+- 🔄 **Deadlock Visualization** — circular wait chain display showing which customers are waiting for which items
+- ⚙️ **Auto-Detection** — system automatically detects when circular waiting occurs
+- 🔨 **Manual Resolution** — click "Resolve" button to perform victim preemption and break deadlock
+- 📊 **Live Metrics** — active customers, inventory items, active deadlocks, and resolved deadlock counters
+- 🎯 **Realistic Scenario** — customers want items in different orders → circular wait → deadlock
+
+**Access:** Navigate to the **Shopping** tab in the main dashboard
 
 ---
 
@@ -266,19 +302,27 @@ Deadlock_Online_Shopping/
 │       ├── index.js              # React entry point (BrowserRouter)
 │       ├── index.css             # Global styles
 │       ├── hooks/
-│       │   └── useSimulation.js  # Core simulation engine (tick-based state)
+│       │   ├── useSimulation.js       # Core OS simulation engine (tick-based state)
+│       │   └── useShoppingSimulation.js  # E-commerce deadlock simulation (NEW!)
 │       ├── data/
 │       │   └── mockData.js       # Data generators (customers, resources, events)
 │       └── components/
-│           ├── SystemStatus.jsx      # System state indicator
-│           ├── ResourceMonitor.jsx   # Resource allocation table with manual selection
-│           ├── WaitForGraph.jsx      # Dependency graph visualization
-│           ├── ControlPanel.jsx      # Strategy toggles & controls
-│           ├── EventLog.jsx          # Live event feed
-│           ├── PerformanceMetrics.jsx # Charts & graphs
-│           ├── StressTest.jsx        # Stress test monitor with level control
-│           ├── AboutPage.jsx         # About page with project details
-│           └── GlassCard.jsx         # Reusable glassmorphism card
+│           ├── SystemStatus.jsx          # System state indicator
+│           ├── ResourceMonitor.jsx       # Resource allocation table with manual selection
+│           ├── WaitForGraph.jsx          # Dependency graph visualization
+│           ├── ControlPanel.jsx          # Strategy toggles & controls
+│           ├── EventLog.jsx              # Live event feed
+│           ├── PerformanceMetrics.jsx    # Charts & graphs
+│           ├── StressTest.jsx            # Stress test monitor with level control
+│           ├── AboutPage.jsx             # About page with project details
+│           ├── GlassCard.jsx             # Reusable glassmorphism card
+│           ├── ShoppingDashboard.jsx     # E-commerce deadlock dashboard (NEW!)
+│           ├── CustomerList.jsx          # Shopping: customer list display (NEW!)
+│           ├── ShoppingCart.jsx          # Shopping: customer carts (NEW!)
+│           ├── DeadlockVisualizer.jsx    # Shopping: circular wait visualization (NEW!)
+│           ├── InventoryManager.jsx      # Shopping: inventory & locking status (NEW!)
+│           ├── ShoppingEventLog.jsx      # Shopping: event log (NEW!)
+│           └── ShoppingControlPanel.jsx  # Shopping: controls (NEW!)
 │
 ├── logs/                         # Runtime logs (system.log)
 ├── results/                      # Execution output files
