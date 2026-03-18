@@ -134,7 +134,71 @@ export function generatePerformancePoint(tick, isStress = false) {
   };
 }
 
+// MANUAL WAIT-FOR GRAPH - Predefined structure (change autoGenerate to false to use)
+export function generateManualWaitForGraph() {
+  return {
+    nodes: [
+      // Customers
+      { id: 'C1', label: 'Customer_Payment_Gate', type: 'customer', state: 'waiting' },
+      { id: 'C2', label: 'Customer_Inventory_DB', type: 'customer', state: 'waiting' },
+      { id: 'C3', label: 'Customer_Order_Process', type: 'customer', state: 'waiting' },
+      { id: 'Customer_A', label: 'Customer_A', type: 'customer', state: 'running' },
+      { id: 'Customer_D', label: 'Customer_D', type: 'customer', state: 'running' },
+      { id: 'Customer_E', label: 'Customer_E', type: 'customer', state: 'running' },
+      { id: 'Customer_F', label: 'Customer_F', type: 'customer', state: 'running' },
+      
+      // Resources
+      { id: 'R1', label: 'Payment_Gateway', type: 'resource', state: 'held' },
+      { id: 'R2', label: 'Inventory_DB', type: 'resource', state: 'held' },
+      { id: 'R3', label: 'Order_Processor', type: 'resource', state: 'waiting' },
+      { id: 'R5', label: 'Coupon_Engine', type: 'resource', state: 'held' },
+      { id: 'R6', label: 'Wallet_Service', type: 'resource', state: 'held' },
+      { id: 'R7', label: 'Auth_Token', type: 'resource', state: 'held' },
+      { id: 'R8', label: 'Session_Manager', type: 'resource', state: 'held' },
+      { id: 'R9', label: 'Cart_Lock', type: 'resource', state: 'held' },
+      { id: 'CB', label: 'Auth_Token', type: 'customer', state: 'running' },
+    ],
+    edges: [
+      // Customer A → Resources
+      { from: 'Customer_A', to: 'R7', type: 'waiting', cycle: false },
+      { from: 'R8', to: 'Customer_A', type: 'assigned', cycle: false },
+      
+      // Customer B → Resources
+      { from: 'CB', to: 'R9', type: 'waiting', cycle: false },
+      
+      // Customer D → Resources
+      { from: 'Customer_D', to: 'R6', type: 'waiting', cycle: false },
+      { from: 'R5', to: 'Customer_D', type: 'assigned', cycle: false },
+      
+      // Customer E → Resources
+      { from: 'Customer_E', to: 'R2', type: 'waiting', cycle: false },
+      { from: 'R1', to: 'Customer_E', type: 'assigned', cycle: false },
+      
+      // Customer F → Resources  
+      { from: 'Customer_F', to: 'R5', type: 'waiting', cycle: false },
+      { from: 'R6', to: 'Customer_F', type: 'assigned', cycle: false },
+      
+      // Cycle detection edges (for deadlock)
+      { from: 'C1', to: 'R1', type: 'waiting', cycle: false },
+      { from: 'R2', to: 'C1', type: 'assigned', cycle: false },
+      
+      { from: 'C2', to: 'R7', type: 'waiting', cycle: false },
+      { from: 'R5', to: 'C2', type: 'assigned', cycle: false },
+      
+      { from: 'C3', to: 'R3', type: 'waiting', cycle: false },
+      { from: 'R9', to: 'C3', type: 'assigned', cycle: false },
+    ]
+  };
+}
+
 export function generateWaitForGraph(customers, resources) {
+  // Set autoGenerate to false to use manual graph instead
+  const autoGenerate = true;
+  
+  if (!autoGenerate) {
+    return generateManualWaitForGraph();
+  }
+
   const nodes = [];
   const edges = [];
 

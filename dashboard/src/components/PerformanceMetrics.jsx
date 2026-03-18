@@ -75,8 +75,8 @@ export default function PerformanceMetrics({ perfData, totalGranted, totalDenied
         />
       </div>
 
-      {/* System Load Chart */}
-      <div className="mb-5">
+      {/* System Load Chart - COMMENTED OUT */}
+      {/* <div className="mb-5">
         <h3 className="text-xs font-medium text-surface-400 uppercase tracking-wider mb-3">
           System Load Over Time
         </h3>
@@ -120,10 +120,10 @@ export default function PerformanceMetrics({ perfData, totalGranted, totalDenied
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </div> */}
 
-      {/* Granted vs Denied Chart */}
-      <div>
+      {/* Granted vs Denied Chart - COMMENTED OUT */}
+      {/* <div>
         <h3 className="text-xs font-medium text-surface-400 uppercase tracking-wider mb-3">
           Granted vs Denied Requests
         </h3>
@@ -143,7 +143,7 @@ export default function PerformanceMetrics({ perfData, totalGranted, totalDenied
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </div> */}
     </GlassCard>
   );
 }
