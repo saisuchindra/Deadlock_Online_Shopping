@@ -40,7 +40,13 @@ export function useSimulation() {
   const [eventLog, setEventLog] = useState([]);
   const [perfData, setPerfData] = useState([]);
   const [stressData, setStressData] = useState([]);
-  const [graphData, setGraphData] = useState(() => generateWaitForGraph([], []));
+  
+  // Initialize graph with manual data
+  const [graphData, setGraphData] = useState(() => {
+    const initialCustomers = generateInitialCustomers(6);
+    const initialResources = generateInitialResources(8);
+    return generateWaitForGraph(initialCustomers, initialResources);
+  });
 
   // Aggregate metrics
   const [systemStatus, setSystemStatus] = useState('idle'); // idle, running, deadlock, recovery
@@ -369,6 +375,14 @@ export function useSimulation() {
   }, [isRunning, simulateTick]);
   */
 
+  // ========================================================
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // Update graph when customers or resources change
+  // ========================================================
+  useEffect(() => {
+    setGraphData(generateWaitForGraph(customers, resources));
+  }, [customers, resources]);
+
   // STUB: Disabled simulation loop - using manual data only
   useEffect(() => {
     // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
@@ -485,6 +499,118 @@ export function useSimulation() {
     setActiveResourceIds(new Set());
   }, []);
 
+  // ========================================================
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // MANUAL DEADLOCK CONTROL FUNCTIONS
+  // ========================================================
+
+  const setupDeadlock = useCallback((scenario) => {
+    if (scenario === 'scenario1') {
+      // Scenario 1: C1 ↔ C2 circular wait
+      // C1 holds R1, waits for R2
+      // C2 holds R2, waits for R1 (DEADLOCK)
+      setCustomers([
+        { id: 'C0', name: 'Customer_A', holding: ['R1'], waiting: 'R2', state: 'waiting' },
+        { id: 'C1', name: 'Customer_B', holding: ['R2'], waiting: 'R1', state: 'waiting' },
+        { id: 'C2', name: 'Customer_C', holding: [], waiting: null, state: 'idle' },
+        { id: 'C3', name: 'Customer_D', holding: [], waiting: null, state: 'idle' },
+        { id: 'C4', name: 'Customer_E', holding: [], waiting: null, state: 'idle' },
+        { id: 'C5', name: 'Customer_F', holding: [], waiting: null, state: 'idle' },
+      ]);
+      setResources([
+        { id: 'R1', name: 'Payment_Gateway', owner: 'Customer_A', waitingThreads: ['Customer_B'], available: false, maxInstances: 1, currentInstances: 1 },
+        { id: 'R2', name: 'Inventory_DB', owner: 'Customer_B', waitingThreads: ['Customer_A'], available: false, maxInstances: 1, currentInstances: 1 },
+        { id: 'R3', name: 'Order_Processor', owner: null, waitingThreads: [], available: true, maxInstances: 2, currentInstances: 0 },
+        { id: 'R5', name: 'Coupon_Engine', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+        { id: 'R6', name: 'Wallet_Service', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+        { id: 'R7', name: 'Auth_Token', owner: null, waitingThreads: [], available: true, maxInstances: 3, currentInstances: 0 },
+        { id: 'R8', name: 'Session_Manager', owner: null, waitingThreads: [], available: true, maxInstances: 2, currentInstances: 0 },
+        { id: 'R9', name: 'Cart_Lock', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+      ]);
+      setSystemStatus('deadlock');
+      setDeadlockCount((prev) => prev + 1);
+    } else if (scenario === 'scenario2') {
+      // Scenario 2: C1 & C2 Both Want R1
+      // Both customers waiting for same resource (conflict)
+      setCustomers([
+        { id: 'C0', name: 'Customer_A', holding: [], waiting: 'R1', state: 'waiting' },
+        { id: 'C1', name: 'Customer_B', holding: [], waiting: 'R1', state: 'waiting' },
+        { id: 'C2', name: 'Customer_C', holding: [], waiting: null, state: 'idle' },
+        { id: 'C3', name: 'Customer_D', holding: [], waiting: null, state: 'idle' },
+        { id: 'C4', name: 'Customer_E', holding: [], waiting: null, state: 'idle' },
+        { id: 'C5', name: 'Customer_F', holding: [], waiting: null, state: 'idle' },
+      ]);
+      setResources([
+        { id: 'R1', name: 'Payment_Gateway', owner: null, waitingThreads: ['Customer_A', 'Customer_B'], available: false, maxInstances: 1, currentInstances: 0 },
+        { id: 'R2', name: 'Inventory_DB', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+        { id: 'R3', name: 'Order_Processor', owner: null, waitingThreads: [], available: true, maxInstances: 2, currentInstances: 0 },
+        { id: 'R5', name: 'Coupon_Engine', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+        { id: 'R6', name: 'Wallet_Service', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+        { id: 'R7', name: 'Auth_Token', owner: null, waitingThreads: [], available: true, maxInstances: 3, currentInstances: 0 },
+        { id: 'R8', name: 'Session_Manager', owner: null, waitingThreads: [], available: true, maxInstances: 2, currentInstances: 0 },
+        { id: 'R9', name: 'Cart_Lock', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+      ]);
+      setSystemStatus('running');
+    } else if (scenario === 'scenario3') {
+      // Scenario 3: Chain Deadlock (3-way)
+      // C1 → R1 → C2 → R2 → C3 → R1 (circular)
+      setCustomers([
+        { id: 'C0', name: 'Customer_A', holding: ['R1'], waiting: 'R2', state: 'waiting' },
+        { id: 'C1', name: 'Customer_B', holding: ['R2'], waiting: 'R9', state: 'waiting' },
+        { id: 'C2', name: 'Customer_C', holding: ['R9'], waiting: 'R1', state: 'waiting' },
+        { id: 'C3', name: 'Customer_D', holding: [], waiting: null, state: 'idle' },
+        { id: 'C4', name: 'Customer_E', holding: [], waiting: null, state: 'idle' },
+        { id: 'C5', name: 'Customer_F', holding: [], waiting: null, state: 'idle' },
+      ]);
+      setResources([
+        { id: 'R1', name: 'Payment_Gateway', owner: 'Customer_A', waitingThreads: ['Customer_C'], available: false, maxInstances: 1, currentInstances: 1 },
+        { id: 'R2', name: 'Inventory_DB', owner: 'Customer_B', waitingThreads: ['Customer_A'], available: false, maxInstances: 1, currentInstances: 1 },
+        { id: 'R3', name: 'Order_Processor', owner: null, waitingThreads: [], available: true, maxInstances: 2, currentInstances: 0 },
+        { id: 'R5', name: 'Coupon_Engine', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+        { id: 'R6', name: 'Wallet_Service', owner: null, waitingThreads: [], available: true, maxInstances: 1, currentInstances: 0 },
+        { id: 'R7', name: 'Auth_Token', owner: null, waitingThreads: [], available: true, maxInstances: 3, currentInstances: 0 },
+        { id: 'R8', name: 'Session_Manager', owner: null, waitingThreads: [], available: true, maxInstances: 2, currentInstances: 0 },
+        { id: 'R9', name: 'Cart_Lock', owner: 'Customer_C', waitingThreads: ['Customer_B'], available: false, maxInstances: 1, currentInstances: 1 },
+      ]);
+      setSystemStatus('deadlock');
+      setDeadlockCount((prev) => prev + 1);
+    }
+  }, []);
+
+  const requestResource = useCallback((customerId, resourceId) => {
+    // Customer requests a resource
+    setCustomers((prev) =>
+      prev.map((c) =>
+        c.id === customerId ? { ...c, waiting: resourceId, state: 'waiting' } : c
+      )
+    );
+    setResources((prev) =>
+      prev.map((r) =>
+        r.id === resourceId
+          ? { ...r, waitingThreads: [...r.waitingThreads, customerId] }
+          : r
+      )
+    );
+  }, []);
+
+  const releaseResource = useCallback((customerId) => {
+    // Customer releases all held resources
+    setCustomers((prev) =>
+      prev.map((c) =>
+        c.id === customerId ? { ...c, holding: [], waiting: null, state: 'idle' } : c
+      )
+    );
+    setResources((prev) =>
+      prev.map((r) => ({
+        ...r,
+        owner: r.owner === customerId ? null : r.owner,
+        available: r.owner === customerId ? true : r.available,
+        currentInstances: r.owner === customerId ? 0 : r.currentInstances,
+        waitingThreads: r.waitingThreads.filter((id) => id !== customerId),
+      }))
+    );
+  }, []);
+
   return {
     // State
     isRunning,
@@ -518,5 +644,10 @@ export function useSimulation() {
     setPreventionEnabled,
     setAvoidanceEnabled,
     setDetectionEnabled,
+
+    // Manual Deadlock Control - AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+    setupDeadlock,
+    requestResource,
+    releaseResource,
   };
 }

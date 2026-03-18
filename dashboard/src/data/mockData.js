@@ -194,54 +194,56 @@ export function generatePerformancePoint(tick, isStress = false) {
 
 // ========================================================
 // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
-// MANUAL WAIT-FOR GRAPH - Static structure (replaces auto-generation)
+// MANUAL WAIT-FOR GRAPH - Dynamic edges from manual data
 // ========================================================
 export function generateWaitForGraph(customers, resources) {
-  // MANUAL MODE: Always return static data (ignores parameters)
-  // This is the manual wait-for graph that replaces automatic generation
-  return {
-    nodes: [
-      // Customers
-      { id: 'C0', label: 'Customer_A', type: 'customer', state: 'running' },
-      { id: 'C1', label: 'Customer_B', type: 'customer', state: 'waiting' },
-      { id: 'C2', label: 'Customer_C', type: 'customer', state: 'waiting' },
-      { id: 'C3', label: 'Customer_D', type: 'customer', state: 'waiting' },
-      { id: 'C4', label: 'Customer_E', type: 'customer', state: 'running' },
-      { id: 'C5', label: 'Customer_F', type: 'customer', state: 'running' },
-      
-      // Resources
-      { id: 'R1', label: 'Payment_Gateway', type: 'resource', state: 'held' },
-      { id: 'R2', label: 'Inventory_DB', type: 'resource', state: 'held' },
-      { id: 'R3', label: 'Order_Processor', type: 'resource', state: 'available' },
-      { id: 'R5', label: 'Coupon_Engine', type: 'resource', state: 'held' },
-      { id: 'R6', label: 'Wallet_Service', type: 'resource', state: 'held' },
-      { id: 'R7', label: 'Auth_Token', type: 'resource', state: 'available' },
-      { id: 'R8', label: 'Session_Manager', type: 'resource', state: 'held' },
-      { id: 'R9', label: 'Cart_Lock', type: 'resource', state: 'available' },
-    ],
-    edges: [
-      // Customer A: holds R1 and R8, no wait
-      { from: 'R1', to: 'C0', type: 'assigned', cycle: false },
-      { from: 'R8', to: 'C0', type: 'assigned', cycle: false },
-      
-      // Customer B: waiting for R9
-      { from: 'C1', to: 'R9', type: 'waiting', cycle: false },
-      
-      // Customer C: waiting for R3
-      { from: 'C2', to: 'R3', type: 'waiting', cycle: false },
-      
-      // Customer D: holds R5, waiting for R2 (held by Customer_E)
-      // This creates a wait dependency
-      { from: 'R5', to: 'C3', type: 'assigned', cycle: false },
-      { from: 'C3', to: 'R2', type: 'waiting', cycle: false },
-      
-      // Customer E: holds R2, no wait
-      { from: 'R2', to: 'C4', type: 'assigned', cycle: false },
-      
-      // Customer F: holds R6, no wait
-      { from: 'R6', to: 'C5', type: 'assigned', cycle: false },
-    ]
-  };
+  // MANUAL MODE: Uses provided customers and resources to generate edges
+  // This allows manual control while keeping the graph rendering
+  
+  const nodes = [];
+  const edges = [];
+
+  // Add customer nodes
+  if (customers && customers.length > 0) {
+    customers.forEach((c) => {
+      nodes.push({
+        id: c.id,
+        label: c.name,
+        type: 'customer',
+        state: c.state,
+      });
+    });
+  }
+
+  // Add resource nodes
+  if (resources && resources.length > 0) {
+    resources.forEach((r) => {
+      nodes.push({
+        id: r.id,
+        label: r.name,
+        type: 'resource',
+        state: r.available ? 'available' : 'held',
+      });
+    });
+  }
+
+  // Generate edges from customer/resource relationships
+  if (customers && customers.length > 0 && resources && resources.length > 0) {
+    customers.forEach((c) => {
+      // Add edges for held resources
+      if (c.holding && c.holding.length > 0) {
+        c.holding.forEach((rId) => {
+          edges.push({ from: rId, to: c.id, type: 'assigned', cycle: false });
+        });
+      }
+      // Add edge for waiting resource
+      if (c.waiting) {
+        edges.push({ from: c.id, to: c.waiting, type: 'waiting', cycle: false });
+      }
+    });
+  }
+
+  return { nodes, edges };
 }
 
 /*
