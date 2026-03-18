@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Deadlock Management Framework</title>
+    <script type="text/javascript">
+      // This is a redirect for GitHub Pages to enable React Router
+      var segmentCount = 0,
+          l = window.location;
+      if (l.pathname.split("/").length > 2) {
+        segmentCount = l.pathname.split("/").length - 2;
+      }
+      var rawRedirectPath = "/" + l.pathname.split("/").slice(1, 1 + segmentCount).join("/") + "/?redirect=" + l.pathname.slice(1).split("?")[0].replace(/\//g, "~");
+      if (l.search) {
+        rawRedirectPath += "&redirectQueryString=" + l.search.slice(1).replace(/\//g, "~");
+      }
+      l.replace(rawRedirectPath);
+    </script>
+  </head>
+  <body></body>
+</html>
