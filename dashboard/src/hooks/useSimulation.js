@@ -31,13 +31,16 @@ export function useSimulation() {
   // Active resource filter (empty Set = all active)
   const [activeResourceIds, setActiveResourceIds] = useState(new Set());
 
-  // Core state
+  // ========================================================
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // Initialize with manual data (replaces auto-generation)
+  // ========================================================
   const [resources, setResources] = useState(() => generateInitialResources(8));
   const [customers, setCustomers] = useState(() => generateInitialCustomers(6));
   const [eventLog, setEventLog] = useState([]);
   const [perfData, setPerfData] = useState([]);
   const [stressData, setStressData] = useState([]);
-  const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
+  const [graphData, setGraphData] = useState(() => generateWaitForGraph([], []));
 
   // Aggregate metrics
   const [systemStatus, setSystemStatus] = useState('idle'); // idle, running, deadlock, recovery
@@ -54,6 +57,14 @@ export function useSimulation() {
     systemStatusRef.current = systemStatus;
   }, [systemStatus]);
 
+  // ========================================================
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // SIMULATION LOOP DISABLED - Using manual data only
+  // ========================================================
+  
+  /*
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // COMMENTED OUT: Simulation tick callback that updates graph automatically
   const simulateTick = useCallback(() => {
     tickRef.current += 1;
     const currentTick = tickRef.current;
@@ -329,7 +340,22 @@ export function useSimulation() {
       return prevCustomers;
     });
   }, [preventionEnabled, avoidanceEnabled, detectionEnabled, stressTestActive, stressLevel, activeResourceIds]);
+  */
 
+  // STUB: Empty callback (simulation disabled)
+  const simulateTick = useCallback(() => {
+    // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+    // Simulation loop is disabled - using manual data only
+  }, []);
+
+  // ========================================================
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // MAIN SIMULATION LOOP DISABLED
+  // ========================================================
+  
+  /*
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // COMMENTED OUT: Main simulation loop that runs simulateTick on interval
   // Main simulation loop
   useEffect(() => {
     if (isRunning) {
@@ -341,7 +367,22 @@ export function useSimulation() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isRunning, simulateTick]);
+  */
 
+  // STUB: Disabled simulation loop - using manual data only
+  useEffect(() => {
+    // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+    // Simulation loop disabled
+  }, []);
+
+  // ========================================================
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // DEADLOCK STATE MACHINE DISABLED
+  // ========================================================
+  
+  /*
+  // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+  // COMMENTED OUT: Deadlock state machine that updates graph automatically
   // Mark / clear cycle edges in graph based on system status
   useEffect(() => {
     if (systemStatus === 'deadlock') {
@@ -367,6 +408,13 @@ export function useSimulation() {
       });
     }
   }, [systemStatus]);
+  */
+
+  // STUB: Deadlock state machine disabled
+  useEffect(() => {
+    // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+    // Deadlock state machine disabled - using manual data only
+  }, []);
 
   const startSimulation = useCallback(() => {
     setIsRunning(true);

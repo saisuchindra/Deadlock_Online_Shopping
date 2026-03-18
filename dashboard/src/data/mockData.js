@@ -39,6 +39,13 @@ const EVENT_COLORS = {
   [EVENT_TYPES.RELEASE]: '#6b7280',
 };
 
+// ========================================================
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+// ========================================================
+// The following auto-generation functions are COMMENTED OUT.
+// Manual data structures are used instead (see below).
+// ========================================================
+
 function randomPick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -53,6 +60,8 @@ function generateTimestamp() {
     String(now.getMilliseconds()).padStart(3, '0');
 }
 
+/*
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
 export function generateInitialResources(count = 8) {
   return RESOURCE_NAMES.slice(0, count).map((name, i) => ({
     id: `R${i}`,
@@ -65,6 +74,7 @@ export function generateInitialResources(count = 8) {
   }));
 }
 
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
 export function generateInitialCustomers(count = 6) {
   return CUSTOMER_NAMES.slice(0, count).map((name, i) => ({
     id: `C${i}`,
@@ -74,7 +84,39 @@ export function generateInitialCustomers(count = 6) {
     state: 'idle', // idle, running, waiting, deadlocked
   }));
 }
+*/
 
+// ========================================================
+// MANUAL DATA STRUCTURES – REPLACE AUTO-GENERATION
+// ========================================================
+export function generateInitialResources(count = 8) {
+  // Manual resource definitions (replaces auto-generation)
+  return [
+    { id: 'R1', name: 'Payment_Gateway', owner: 'Customer_A', waitingThreads: [], available: false, maxInstances: 1, currentInstances: 1 },
+    { id: 'R2', name: 'Inventory_DB', owner: 'Customer_E', waitingThreads: ['Customer_D'], available: false, maxInstances: 1, currentInstances: 1 },
+    { id: 'R3', name: 'Order_Processor', owner: null, waitingThreads: ['Customer_C'], available: false, maxInstances: 2, currentInstances: 0 },
+    { id: 'R5', name: 'Coupon_Engine', owner: 'Customer_D', waitingThreads: [], available: false, maxInstances: 1, currentInstances: 1 },
+    { id: 'R6', name: 'Wallet_Service', owner: 'Customer_F', waitingThreads: [], available: false, maxInstances: 1, currentInstances: 1 },
+    { id: 'R7', name: 'Auth_Token', owner: null, waitingThreads: [], available: true, maxInstances: 3, currentInstances: 0 },
+    { id: 'R8', name: 'Session_Manager', owner: 'Customer_A', waitingThreads: [], available: false, maxInstances: 2, currentInstances: 1 },
+    { id: 'R9', name: 'Cart_Lock', owner: null, waitingThreads: ['Customer_B'], available: false, maxInstances: 1, currentInstances: 0 },
+  ];
+}
+
+export function generateInitialCustomers(count = 6) {
+  // Manual customer definitions (replaces auto-generation)
+  return [
+    { id: 'C0', name: 'Customer_A', holding: ['R1', 'R8'], waiting: null, state: 'running' },
+    { id: 'C1', name: 'Customer_B', holding: [], waiting: 'R9', state: 'waiting' },
+    { id: 'C2', name: 'Customer_C', holding: [], waiting: 'R3', state: 'waiting' },
+    { id: 'C3', name: 'Customer_D', holding: ['R5'], waiting: 'R2', state: 'waiting' },
+    { id: 'C4', name: 'Customer_E', holding: ['R2'], waiting: null, state: 'running' },
+    { id: 'C5', name: 'Customer_F', holding: ['R6'], waiting: null, state: 'running' },
+  ];
+}
+
+/*
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
 export function generateEvent(customers, resources, forceType = null) {
   const type = forceType || randomPick(Object.values(EVENT_TYPES));
   const customer = randomPick(customers);
@@ -115,7 +157,16 @@ export function generateEvent(customers, resources, forceType = null) {
     resource: resource.name,
   };
 }
+*/
 
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+// Stub function to prevent errors - returns empty event
+export function generateEvent(customers, resources, forceType = null) {
+  return null; // No events in manual mode
+}
+
+/*
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
 export function generatePerformancePoint(tick, isStress = false) {
   const baseCpu = isStress ? 70 : 30;
   const baseMemory = isStress ? 60 : 25;
@@ -133,64 +184,69 @@ export function generatePerformancePoint(tick, isStress = false) {
     latency: isStress ? randomInt(200, 800) : randomInt(10, 120),
   };
 }
+*/
 
-// MANUAL WAIT-FOR GRAPH - Predefined structure (change autoGenerate to false to use)
-export function generateManualWaitForGraph() {
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+// Stub function for compatibility
+export function generatePerformancePoint(tick, isStress = false) {
+  return null; // No performance data in manual mode
+}
+
+// ========================================================
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+// MANUAL WAIT-FOR GRAPH - Static structure (replaces auto-generation)
+// ========================================================
+export function generateWaitForGraph(customers, resources) {
+  // MANUAL MODE: Always return static data (ignores parameters)
+  // This is the manual wait-for graph that replaces automatic generation
   return {
     nodes: [
       // Customers
-      { id: 'C1', label: 'Customer_Payment_Gate', type: 'customer', state: 'waiting' },
-      { id: 'C2', label: 'Customer_Inventory_DB', type: 'customer', state: 'waiting' },
-      { id: 'C3', label: 'Customer_Order_Process', type: 'customer', state: 'waiting' },
-      { id: 'Customer_A', label: 'Customer_A', type: 'customer', state: 'running' },
-      { id: 'Customer_D', label: 'Customer_D', type: 'customer', state: 'running' },
-      { id: 'Customer_E', label: 'Customer_E', type: 'customer', state: 'running' },
-      { id: 'Customer_F', label: 'Customer_F', type: 'customer', state: 'running' },
+      { id: 'C0', label: 'Customer_A', type: 'customer', state: 'running' },
+      { id: 'C1', label: 'Customer_B', type: 'customer', state: 'waiting' },
+      { id: 'C2', label: 'Customer_C', type: 'customer', state: 'waiting' },
+      { id: 'C3', label: 'Customer_D', type: 'customer', state: 'waiting' },
+      { id: 'C4', label: 'Customer_E', type: 'customer', state: 'running' },
+      { id: 'C5', label: 'Customer_F', type: 'customer', state: 'running' },
       
       // Resources
       { id: 'R1', label: 'Payment_Gateway', type: 'resource', state: 'held' },
       { id: 'R2', label: 'Inventory_DB', type: 'resource', state: 'held' },
-      { id: 'R3', label: 'Order_Processor', type: 'resource', state: 'waiting' },
+      { id: 'R3', label: 'Order_Processor', type: 'resource', state: 'available' },
       { id: 'R5', label: 'Coupon_Engine', type: 'resource', state: 'held' },
       { id: 'R6', label: 'Wallet_Service', type: 'resource', state: 'held' },
-      { id: 'R7', label: 'Auth_Token', type: 'resource', state: 'held' },
+      { id: 'R7', label: 'Auth_Token', type: 'resource', state: 'available' },
       { id: 'R8', label: 'Session_Manager', type: 'resource', state: 'held' },
-      { id: 'R9', label: 'Cart_Lock', type: 'resource', state: 'held' },
-      { id: 'CB', label: 'Auth_Token', type: 'customer', state: 'running' },
+      { id: 'R9', label: 'Cart_Lock', type: 'resource', state: 'available' },
     ],
     edges: [
-      // Customer A → Resources
-      { from: 'Customer_A', to: 'R7', type: 'waiting', cycle: false },
-      { from: 'R8', to: 'Customer_A', type: 'assigned', cycle: false },
+      // Customer A: holds R1 and R8, no wait
+      { from: 'R1', to: 'C0', type: 'assigned', cycle: false },
+      { from: 'R8', to: 'C0', type: 'assigned', cycle: false },
       
-      // Customer B → Resources
-      { from: 'CB', to: 'R9', type: 'waiting', cycle: false },
+      // Customer B: waiting for R9
+      { from: 'C1', to: 'R9', type: 'waiting', cycle: false },
       
-      // Customer D → Resources
-      { from: 'Customer_D', to: 'R6', type: 'waiting', cycle: false },
-      { from: 'R5', to: 'Customer_D', type: 'assigned', cycle: false },
+      // Customer C: waiting for R3
+      { from: 'C2', to: 'R3', type: 'waiting', cycle: false },
       
-      // Customer E → Resources
-      { from: 'Customer_E', to: 'R2', type: 'waiting', cycle: false },
-      { from: 'R1', to: 'Customer_E', type: 'assigned', cycle: false },
+      // Customer D: holds R5, waiting for R2 (held by Customer_E)
+      // This creates a wait dependency
+      { from: 'R5', to: 'C3', type: 'assigned', cycle: false },
+      { from: 'C3', to: 'R2', type: 'waiting', cycle: false },
       
-      // Customer F → Resources  
-      { from: 'Customer_F', to: 'R5', type: 'waiting', cycle: false },
-      { from: 'R6', to: 'Customer_F', type: 'assigned', cycle: false },
+      // Customer E: holds R2, no wait
+      { from: 'R2', to: 'C4', type: 'assigned', cycle: false },
       
-      // Cycle detection edges (for deadlock)
-      { from: 'C1', to: 'R1', type: 'waiting', cycle: false },
-      { from: 'R2', to: 'C1', type: 'assigned', cycle: false },
-      
-      { from: 'C2', to: 'R7', type: 'waiting', cycle: false },
-      { from: 'R5', to: 'C2', type: 'assigned', cycle: false },
-      
-      { from: 'C3', to: 'R3', type: 'waiting', cycle: false },
-      { from: 'R9', to: 'C3', type: 'assigned', cycle: false },
+      // Customer F: holds R6, no wait
+      { from: 'R6', to: 'C5', type: 'assigned', cycle: false },
     ]
   };
 }
 
+/*
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+// OLD AUTO-GENERATION CODE (COMMENTED OUT)
 export function generateWaitForGraph(customers, resources) {
   // Set autoGenerate to false to use manual graph instead
   const autoGenerate = true;
@@ -235,7 +291,10 @@ export function generateWaitForGraph(customers, resources) {
 
   return { nodes, edges };
 }
+*/
 
+/*
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
 export function generateStressData(tick, level = 5) {
   const scale = level / 5; // 1.0 at level 5, 0.2 at level 1, 2.0 at level 10
   return {
@@ -248,6 +307,13 @@ export function generateStressData(tick, level = 5) {
     avgWaitTime: Math.round(randomInt(5, 500) * scale),
     resourceUtilization: Math.min(100, Math.round(randomInt(40, 99) * scale)),
   };
+}
+*/
+
+// AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
+// Stub function for compatibility
+export function generateStressData(tick, level = 5) {
+  return null; // No stress data in manual mode
 }
 
 export {
