@@ -8,7 +8,6 @@ import WaitForGraph from './components/WaitForGraph';
 import PerformanceMetrics from './components/PerformanceMetrics';
 import EventLog from './components/EventLog';
 import ControlPanel from './components/ControlPanel';
-import ManualDeadlockControl from './components/ManualDeadlockControl';
 import StressTest from './components/StressTest';
 import AboutPage from './components/AboutPage';
 import OSExecutionPage from './components/OSExecutionPage';
@@ -60,26 +59,7 @@ function Dashboard({ sim, activeCustomerCount, activeResourceCount }) {
         </div>
       </div>
 
-      {/* Row 2.5: Manual Deadlock Control - AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ManualDeadlockControl
-          customers={sim.customers}
-          resources={sim.resources}
-          onSetupDeadlock={sim.setupDeadlock}
-          onRequestResource={sim.requestResource}
-          onReleaseResource={sim.releaseResource}
-          onResetGraph={sim.resetSystem}
-        />
-        <div className="p-5 rounded-xl bg-surface-800/50 border border-surface-700/30">
-          <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-3">
-            Manual Mode Info
-          </h3>
-          <p className="text-xs text-surface-400 leading-relaxed">
-            Use the deadlock creator to manually set up resource conflicts and analyze deadlock patterns. 
-            Click predefined scenarios or use manual buttons to request/release resources from customers.
-          </p>
-        </div>
-      </div>
+
 
       {/* Row 3: Wait-For Graph + Event Log */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
