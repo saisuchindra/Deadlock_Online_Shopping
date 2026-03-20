@@ -162,7 +162,44 @@ export function generateEvent(customers, resources, forceType = null) {
 // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
 // Stub function to prevent errors - returns empty event
 export function generateEvent(customers, resources, forceType = null) {
-  return null; // No events in manual mode
+  const type = forceType || randomPick(Object.values(EVENT_TYPES));
+  const customer = randomPick(customers);
+  const resource = randomPick(resources);
+
+  let message = '';
+  switch (type) {
+    case EVENT_TYPES.REQUEST:
+      message = `${customer.name} requested ${resource.name}`;
+      break;
+    case EVENT_TYPES.ALLOCATE:
+      message = `${resource.name} allocated to ${customer.name}`;
+      break;
+    case EVENT_TYPES.BLOCK:
+      message = `${customer.name} blocked waiting for ${resource.name} (held by ${randomPick(customers).name})`;
+      break;
+    case EVENT_TYPES.DEADLOCK:
+      message = `Deadlock cycle detected: ${customer.name} → ${resource.name} → ${randomPick(customers).name}`;
+      break;
+    case EVENT_TYPES.RECOVERY:
+      message = `Recovery: preempted ${resource.name} from ${customer.name}`;
+      break;
+    case EVENT_TYPES.RELEASE:
+      message = `${customer.name} released ${resource.name}`;
+      break;
+    default:
+      message = `System event on ${resource.name}`;
+  }
+
+  return {
+    id: Date.now() + Math.random(),
+    timestamp: generateTimestamp(),
+    type,
+    label: EVENT_LABELS[type],
+    color: EVENT_COLORS[type],
+    message,
+    customer: customer.name,
+    resource: resource.name,
+  };
 }
 
 /*
@@ -189,7 +226,21 @@ export function generatePerformancePoint(tick, isStress = false) {
 // AUTO-GENERATION DISABLED – MANUAL MODE ACTIVE
 // Stub function for compatibility
 export function generatePerformancePoint(tick, isStress = false) {
-  return null; // No performance data in manual mode
+  const baseCpu = isStress ? 70 : 30;
+  const baseMemory = isStress ? 60 : 25;
+  const baseThreads = isStress ? 80 : 20;
+
+  return {
+    tick,
+    time: `${tick}s`,
+    cpuUsage: Math.min(100, baseCpu + randomInt(-10, 20)),
+    memoryUsage: Math.min(100, baseMemory + randomInt(-8, 15)),
+    activeThreads: baseThreads + randomInt(-5, 15),
+    throughput: isStress ? randomInt(20, 80) : randomInt(50, 150),
+    granted: randomInt(isStress ? 5 : 20, isStress ? 30 : 60),
+    denied: randomInt(isStress ? 10 : 2, isStress ? 40 : 15),
+    latency: isStress ? randomInt(200, 800) : randomInt(10, 120),
+  };
 }
 
 // ========================================================

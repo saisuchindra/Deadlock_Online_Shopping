@@ -41,7 +41,7 @@ export default function EventLog({ events }) {
         style={{ maxHeight: 400 }}
       >
         <AnimatePresence initial={false}>
-          {events.map((event) => (
+          {events.filter(Boolean).map((event) => (
             <motion.div
               key={event.id}
               initial={{ opacity: 0, height: 0, x: -20 }}
