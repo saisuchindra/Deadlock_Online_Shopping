@@ -90,29 +90,25 @@ export function generateInitialCustomers(count = 6) {
 // MANUAL DATA STRUCTURES – REPLACE AUTO-GENERATION
 // ========================================================
 export function generateInitialResources(count = 8) {
-  // Manual resource definitions (replaces auto-generation)
-  return [
-    { id: 'R1', name: 'Payment_Gateway', owner: 'Customer_A', waitingThreads: [], available: false, maxInstances: 1, currentInstances: 1 },
-    { id: 'R2', name: 'Inventory_DB', owner: 'Customer_E', waitingThreads: ['Customer_D'], available: false, maxInstances: 1, currentInstances: 1 },
-    { id: 'R3', name: 'Order_Processor', owner: null, waitingThreads: ['Customer_C'], available: false, maxInstances: 2, currentInstances: 0 },
-    { id: 'R5', name: 'Coupon_Engine', owner: 'Customer_D', waitingThreads: [], available: false, maxInstances: 1, currentInstances: 1 },
-    { id: 'R6', name: 'Wallet_Service', owner: 'Customer_F', waitingThreads: [], available: false, maxInstances: 1, currentInstances: 1 },
-    { id: 'R7', name: 'Auth_Token', owner: null, waitingThreads: [], available: true, maxInstances: 3, currentInstances: 0 },
-    { id: 'R8', name: 'Session_Manager', owner: 'Customer_A', waitingThreads: [], available: false, maxInstances: 2, currentInstances: 1 },
-    { id: 'R9', name: 'Cart_Lock', owner: null, waitingThreads: ['Customer_B'], available: false, maxInstances: 1, currentInstances: 0 },
-  ];
+  return RESOURCE_NAMES.slice(0, count).map((name, index) => ({
+    id: `R${index + 1}`,
+    name,
+    owner: null,
+    waitingThreads: [],
+    available: true,
+    maxInstances: 1,
+    currentInstances: 0,
+  }));
 }
 
 export function generateInitialCustomers(count = 6) {
-  // Manual customer definitions (replaces auto-generation)
-  return [
-    { id: 'C0', name: 'Customer_A', holding: ['R1', 'R8'], waiting: null, state: 'running' },
-    { id: 'C1', name: 'Customer_B', holding: [], waiting: 'R9', state: 'waiting' },
-    { id: 'C2', name: 'Customer_C', holding: [], waiting: 'R3', state: 'waiting' },
-    { id: 'C3', name: 'Customer_D', holding: ['R5'], waiting: 'R2', state: 'waiting' },
-    { id: 'C4', name: 'Customer_E', holding: ['R2'], waiting: null, state: 'running' },
-    { id: 'C5', name: 'Customer_F', holding: ['R6'], waiting: null, state: 'running' },
-  ];
+  return CUSTOMER_NAMES.slice(0, count).map((name, index) => ({
+    id: `C${index}`,
+    name,
+    holding: [],
+    waiting: null,
+    state: 'idle',
+  }));
 }
 
 /*
@@ -284,7 +280,7 @@ export function generateWaitForGraph(customers, resources) {
       // Add edges for held resources
       if (c.holding && c.holding.length > 0) {
         c.holding.forEach((rId) => {
-          edges.push({ from: rId, to: c.id, type: 'assigned', cycle: false });
+          edges.push({ from: c.id, to: rId, type: 'assigned', cycle: false });
         });
       }
       // Add edge for waiting resource
@@ -295,6 +291,112 @@ export function generateWaitForGraph(customers, resources) {
   }
 
   return { nodes, edges };
+}
+
+export function detectManualDeadlock(customers, resources) {
+  const ownerByResource = new Map(
+    (resources || [])
+      .filter((resource) => resource.owner)
+      .map((resource) => [resource.id, resource.owner])
+  );
+
+  (customers || []).forEach((customer) => {
+    (customer.holding || []).forEach((resourceId) => {
+      if (!ownerByResource.has(resourceId)) {
+        ownerByResource.set(resourceId, customer.id);
+      }
+    });
+  });
+
+  const waitOwnerByCustomer = new Map();
+  (customers || []).forEach((customer) => {
+    if (!customer.waiting) return;
+    const ownerId = ownerByResource.get(customer.waiting);
+    if (ownerId && ownerId !== customer.id) {
+      waitOwnerByCustomer.set(customer.id, ownerId);
+    }
+  });
+
+  const visited = new Set();
+  const inStack = new Set();
+  const stack = [];
+  let cycleCustomerIds = null;
+
+  const dfs = (customerId) => {
+    visited.add(customerId);
+    inStack.add(customerId);
+    stack.push(customerId);
+
+    const nextCustomerId = waitOwnerByCustomer.get(customerId);
+    if (nextCustomerId) {
+      if (!visited.has(nextCustomerId)) {
+        dfs(nextCustomerId);
+      } else if (inStack.has(nextCustomerId)) {
+        const startIndex = stack.indexOf(nextCustomerId);
+        cycleCustomerIds = new Set(stack.slice(startIndex));
+      }
+    }
+
+    stack.pop();
+    inStack.delete(customerId);
+  };
+
+  for (const customer of customers || []) {
+    if (!visited.has(customer.id) && !cycleCustomerIds) {
+      dfs(customer.id);
+    }
+  }
+
+  const cycleResourceIds = new Set();
+  if (cycleCustomerIds) {
+    (customers || []).forEach((customer) => {
+      if (!cycleCustomerIds.has(customer.id)) return;
+      if (customer.waiting) {
+        cycleResourceIds.add(customer.waiting);
+      }
+      (customer.holding || []).forEach((resourceId) => {
+        cycleResourceIds.add(resourceId);
+      });
+    });
+  }
+
+  return {
+    hasDeadlock: Boolean(cycleCustomerIds && cycleCustomerIds.size > 0),
+    cycleCustomerIds: cycleCustomerIds || new Set(),
+    cycleResourceIds,
+  };
+}
+
+export function createSampleManualDeadlock(countCustomers = 6, countResources = 8) {
+  const customers = generateInitialCustomers(countCustomers).map((customer) => ({ ...customer }));
+  const resources = generateInitialResources(countResources).map((resource) => ({ ...resource }));
+
+  if (customers.length < 2 || resources.length < 2) {
+    return { customers, resources };
+  }
+
+  const [customerA, customerB] = customers;
+  const [resourceA, resourceB] = resources;
+
+  customerA.holding = [resourceA.id];
+  customerA.waiting = resourceB.id;
+  customerA.state = 'waiting';
+
+  customerB.holding = [resourceB.id];
+  customerB.waiting = resourceA.id;
+  customerB.state = 'waiting';
+
+  resourceA.owner = customerA.id;
+  resourceA.available = false;
+  resourceA.currentInstances = 1;
+  resourceA.waitingThreads = [customerB.id];
+
+  resourceB.owner = customerB.id;
+  resourceB.available = false;
+  resourceB.currentInstances = 1;
+  resourceB.waitingThreads = [customerA.id];
+
+  return { customers, resources };
 }
 
 /*

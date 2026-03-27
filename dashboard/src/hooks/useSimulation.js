@@ -13,6 +13,7 @@ import {
 
 const TICK_INTERVAL = 1200;
 const MAX_LOG_ENTRIES = 200;
+const MAX_DEADLOCK_LOG_ENTRIES = 80;
 const MAX_PERF_POINTS = 60;
 const MAX_STRESS_POINTS = 40;
 
@@ -38,6 +39,7 @@ export function useSimulation() {
   const [resources, setResources] = useState(() => generateInitialResources(8));
   const [customers, setCustomers] = useState(() => generateInitialCustomers(6));
   const [eventLog, setEventLog] = useState([]);
+  const [deadlockLog, setDeadlockLog] = useState([]);
   const [perfData, setPerfData] = useState([]);
   const [stressData, setStressData] = useState([]);
   
@@ -62,6 +64,19 @@ export function useSimulation() {
   useEffect(() => {
     systemStatusRef.current = systemStatus;
   }, [systemStatus]);
+
+  const makeTimestamp = useCallback(
+    () =>
+      new Date().toLocaleTimeString('en-US', { hour12: false }) +
+      '.' +
+      String(new Date().getMilliseconds()).padStart(3, '0'),
+    []
+  );
+
+  const pushDeadlockEvents = useCallback((entries) => {
+    if (!entries.length) return;
+    setDeadlockLog((prev) => [...entries, ...prev].slice(0, MAX_DEADLOCK_LOG_ENTRIES));
+  }, []);
 
   // ========================================================
   // AUTOMATIC SIMULATION - ENABLED
@@ -203,6 +218,7 @@ export function useSimulation() {
     let newStatus = prevStatus;
     let didDeadlock = false;
     let didRecover = false;
+    const deadlockEntries = [];
 
     if (preventionEnabled || avoidanceEnabled) {
       // Strategies active → no deadlocks possible; clear any leftover deadlocked state
@@ -223,12 +239,30 @@ export function useSimulation() {
         setCustomers((prev) => {
           const updated = prev.map((c) => ({ ...c }));
           const waiting = updated.filter((c) => c.state === 'waiting');
-          if (waiting.length >= 2) {
-            waiting.slice(0, 2).forEach((c) => { c.state = 'deadlocked'; });
-          } else {
-            const running = updated.filter((c) => c.state === 'running');
-            running.slice(0, 2).forEach((c) => { c.state = 'deadlocked'; });
+          const deadlockedCustomers = waiting.length >= 2
+            ? waiting.slice(0, 2)
+            : updated.filter((c) => c.state === 'running').slice(0, 2);
+
+          deadlockedCustomers.forEach((c) => { c.state = 'deadlocked'; });
+
+          if (deadlockedCustomers.length > 0) {
+            const cycleSummary = deadlockedCustomers
+              .map((c) => {
+                const held = c.holding.length > 0 ? c.holding.join(', ') : 'no held resources';
+                return `${c.name} holds ${held}${c.waiting ? ` and waits for ${c.waiting}` : ''}`;
+              })
+              .join(' | ');
+
+            deadlockEntries.push({
+              id: Date.now() + Math.random(),
+              timestamp: makeTimestamp(),
+              type: EVENT_TYPES.DEADLOCK,
+              label: 'Cycle Detected',
+              color: '#ef4444',
+              message: cycleSummary,
+            });
           }
+
           return updated;
         });
       } else if (prevStatus === 'deadlock') {
@@ -236,6 +270,14 @@ export function useSimulation() {
           didRecover = true;
           setRecoveryCount((prev) => prev + 1);
           newStatus = 'recovery';
+          deadlockEntries.push({
+            id: Date.now() + Math.random(),
+            timestamp: makeTimestamp(),
+            type: EVENT_TYPES.RECOVERY,
+            label: 'Recovery Started',
+            color: '#8b5cf6',
+            message: 'Detection thread initiated recovery and released blocked resources.',
+          });
           // Clear deadlocked customers and release their resources
           setCustomers((prev) =>
             prev.map((c) =>
@@ -267,6 +309,7 @@ export function useSimulation() {
     }
 
     setSystemStatus(newStatus);
+    pushDeadlockEvents(deadlockEntries);
 
     // Generate events
     setCustomers((prevCustomers) => {
@@ -282,17 +325,12 @@ export function useSimulation() {
         }
 
         // Strategy-specific events for visible feedback
-        const ts = () =>
-          new Date().toLocaleTimeString('en-US', { hour12: false }) +
-          '.' +
-          String(new Date().getMilliseconds()).padStart(3, '0');
-
         if (preventionEnabled && Math.random() > 0.35) {
           const c = randomPick(prevCustomers);
           const r = randomPick(prevResources);
           newEvents.push({
             id: Date.now() + Math.random(),
-            timestamp: ts(),
+            timestamp: makeTimestamp(),
             type: 'prevention',
             label: 'Prevention Active',
             color: '#10b981',
@@ -308,7 +346,7 @@ export function useSimulation() {
           const safe = Math.random() > 0.3;
           newEvents.push({
             id: Date.now() + Math.random(),
-            timestamp: ts(),
+            timestamp: makeTimestamp(),
             type: safe ? 'avoidance_safe' : 'avoidance_denied',
             label: safe ? "Banker's Check Passed" : "Banker's Check Denied",
             color: safe ? '#3b82f6' : '#f59e0b',
@@ -342,7 +380,16 @@ export function useSimulation() {
       });
       return prevCustomers;
     });
-  }, [preventionEnabled, avoidanceEnabled, detectionEnabled, stressTestActive, stressLevel, activeResourceIds]);
+  }, [
+    preventionEnabled,
+    avoidanceEnabled,
+    detectionEnabled,
+    stressTestActive,
+    stressLevel,
+    activeResourceIds,
+    makeTimestamp,
+    pushDeadlockEvents,
+  ]);
 
   // Main simulation loop
   useEffect(() => {
@@ -393,15 +440,18 @@ export function useSimulation() {
   }, []);
 
   const resetSystem = useCallback(() => {
+    const initialResources = generateInitialResources(8);
+    const initialCustomers = generateInitialCustomers(6);
     setIsRunning(false);
     tickRef.current = 0;
     setTick(0);
-    setResources(generateInitialResources(8));
-    setCustomers(generateInitialCustomers(6));
+    setResources(initialResources);
+    setCustomers(initialCustomers);
     setEventLog([]);
+    setDeadlockLog([]);
     setPerfData([]);
     setStressData([]);
-    setGraphData({ nodes: [], edges: [] });
+    setGraphData(generateWaitForGraph(initialCustomers, initialResources));
     setSystemStatus('idle');
     setDeadlockCount(0);
     setRecoveryCount(0);
@@ -459,6 +509,7 @@ export function useSimulation() {
     resources,
     customers,
     eventLog,
+    deadlockLog,
     perfData,
     stressData,
     graphData,
@@ -484,5 +535,10 @@ export function useSimulation() {
     setPreventionEnabled,
     setAvoidanceEnabled,
     setDetectionEnabled,
+
+    // Expose setters for manual mode
+    setCustomers,
+    setResources,
+    setGraphData,
   };
 }

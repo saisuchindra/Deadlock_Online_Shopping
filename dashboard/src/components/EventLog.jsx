@@ -15,7 +15,7 @@ const typeIcons = {
   avoidance_denied: '⚠',
 };
 
-export default function EventLog({ events }) {
+export default function EventLog({ events, title = 'System Event Log', emptyMessage = 'No events yet. Start the simulation.' }) {
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function EventLog({ events }) {
     <GlassCard className="p-5 flex flex-col" style={{ maxHeight: 480 }}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-surface-300 uppercase tracking-wider">
-          Deadlock Event Log
+          {title}
         </h2>
         <span className="text-xs text-surface-500 tabular-nums">
           {events.length} entries
@@ -97,7 +97,7 @@ export default function EventLog({ events }) {
 
         {events.length === 0 && (
           <div className="flex items-center justify-center h-32 text-surface-500 text-sm">
-            No events yet. Start the simulation.
+            {emptyMessage}
           </div>
         )}
       </div>
